@@ -1,12 +1,15 @@
 from pyrsistent import s
 
 
-def get_relation_class(a):
+def get_relation_class(members, relation):
 
     class Relation:
         def __init__(self):
-            self.relation = s()
-            self.members = a
+            if not relation:
+                self.relation = s()
+            else:
+                self.relation = relation
+            self.members = members
 
         def __iter__(self):
             return self.members.__iter__()
@@ -17,31 +20,31 @@ def get_relation_class(a):
 
         def add(self, el):
             """adding an element to the relation"""
-            self.relation = self.relation.add(el)
+            return get_relation_class(self.members, self.relation.add(el))
 
         def remove(self, el):
             """removing an element from the relation"""
             if el in self.relation:
-                self.relation = self.relation.remove(el)
+                return get_relation_class(self.members, self.relation.remove(el))
 
         def union(self, other):
             """union of two relations"""
-            self.relation = self.relation.union(other.relation)
+            return get_relation_class(self.members, self.relation.union(other.relation))
 
         def intersection(self, other):
             """intersection of two relations"""
-            self.relation = self.relation.intersection(other.relation)
+            return get_relation_class(self.members, self.relation.intersection(other.relation))
 
         def subtraction(self, other):
             """subtraction of two relations"""
-            self.relation = self.relation.difference(other.relation)
+            return get_relation_class(self.members, self.relation.difference(other.relation))
 
         def inverse_rel(self):
             """inverse relation"""
             temp = s()
             for x, y in self.relation:
                 temp = temp.add((y, x))
-            self.relation = temp
+            return get_relation_class(self.members, temp)
 
         def reflexive(self):
             """is the relation reflexive"""
@@ -52,13 +55,9 @@ def get_relation_class(a):
 
         def symmetric(self):
             """is the relation symmetric"""
-            temp = []
             for (x, y) in self.relation:
-                if (x, y) not in temp:
-                    if (y, x) not in self.relation:
-                        return False
-                temp.append((x, y))
-                temp.append((y, x))
+                if (y, x) not in self.relation:
+                    return False
             return True
 
         def transitive(self):
@@ -86,7 +85,7 @@ def get_relation_class(a):
                     break
                 relation = current
 
-            return relation
+            return get_relation_class(self.members, relation)
 
         def prt(self):
             print(self.relation)
@@ -95,31 +94,36 @@ def get_relation_class(a):
 
 
 """
-rel = get_relation_class(s(1, 2, 3, 4))
+rel = get_relation_class(s(1, 2, 3, 4), None)
 rel.prt()
 print("c", rel.contains(("one", "two")))
-rel.add(("one", "two"))
-rel.add(("three", "four"))
-rel.add(("one", "four"))
-rel.prt()
-#rel.remove(("oned", "twod"))
-rel.prt()
-relOther = get_relation_class(s())
-relOther.add(("one", "two"))
-relOther.add(("oned", "twod"))
-relOther.add(("onedes", "twodes"))
-#rel.union(relOther)
-rel.prt()
-#rel.intersection(relOther)
-rel.prt()
-relOtherX = get_relation_class(s())
-relOtherX.add(("one", "two"))
-#rel.subtraction(relOtherX)
-rel.prt()
-#rel.inverse_rel()
-rel.prt()
+rel2 = rel.add(("one", "two"))
+rel3 = rel2.add(("three", "four"))
+rel4 = rel3.add(("one", "four"))
+rel4.prt()
+rel5 = rel4.remove(("one", "two"))
+rel5.prt()
+relOther = get_relation_class(s(), None)
+relOther1 = relOther.add(("one", "two"))
+relOther2 = relOther1.add(("oned", "twod"))
+relOther3 = relOther2.add(("onedes", "twodes"))
+relOther3.prt()
+rel6 = rel5.union(relOther3)
+rel6.prt()
+rel7 = rel6.intersection(relOther3)
+rel7.prt()
+relOtherX = get_relation_class(s(), None)
+relOtherX1 = relOtherX.add(("one", "two"))
+relOtherX2 = rel7.subtraction(relOtherX1)
+relOtherX2.prt()
+rel8 = relOtherX2.inverse_rel()
+rel8.prt()
+relX = get_relation_class(s(1, 2, 3), s((1, 2), (2, 3), (2, 1)))
 print(rel.reflexive())
-print(rel.symmetric())
+print(relX.symmetric())
 print(rel.transitive())
-print(rel.reflexive_transitive())
+rel9 = get_relation_class(s(1, 2, 3, 4), s((1, 2), (2, 3), (3, 4)))
+rel9.prt()
+rel10 = rel9.reflexive_transitive()
+rel10.prt()
 """
